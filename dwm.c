@@ -49,12 +49,11 @@
 #define CLEANMASK(mask)         (mask & ~(numlockmask|LockMask) & (ShiftMask|ControlMask|Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
 #define INTERSECT(x,y,w,h,m)    (MAX(0, MIN((x)+(w),(m)->wx+(m)->ww) - MAX((x),(m)->wx)) \
                                * MAX(0, MIN((y)+(h),(m)->wy+(m)->wh) - MAX((y),(m)->wy)))
-#define ISVISIBLE(C)            ((C->tags & C->mon->tagset))
+#define ISVISIBLE(C)            ((C->wspace == C->mon->wspace))
 #define LENGTH(X)               (sizeof X / sizeof X[0])
 #define MOUSEMASK               (BUTTONMASK|PointerMotionMask)
 #define WIDTH(X)                ((X)->w + 2 * (X)->bw)
 #define HEIGHT(X)               ((X)->h + 2 * (X)->bw)
-#define TAGMASK                 ((1 << 9) - 1)
 #define TEXTW(X)                (drw_fontset_getwidth(drw, (X)) + lrpad)
 
 /* enums */
@@ -91,7 +90,7 @@ struct Client {
 	int oldx, oldy, oldw, oldh;
 	int basew, baseh, incw, inch, maxw, maxh, minw, minh;
 	int bw, oldbw;
-	unsigned int tags;
+	int wspace;
 	int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen;
 	Client *next;
 	Client *snext;
@@ -114,7 +113,7 @@ struct Monitor {
 	int by;               /* bar geometry */
 	int mx, my, mw, mh;   /* screen size */
 	int wx, wy, ww, wh;   /* window area  */
-	unsigned int tagset;
+	int wspace;
 	int showbar;
 	int topbar;
 	Client *clients;
@@ -128,7 +127,7 @@ typedef struct {
 	const char *class;
 	const char *instance;
 	const char *title;
-	unsigned int tags;
+	int wspace;
 	int isfloating;
 	int monitor;
 } Rule;
@@ -203,9 +202,7 @@ static void tagmon(const Arg *arg);
 static void tile(Monitor *);
 static void togglebar(const Arg *arg);
 static void togglefloating(const Arg *arg);
-static void toggletag(const Arg *arg);
 static void toggletiled(const Arg *arg);
-static void toggleview(const Arg *arg);
 static void unfocus(Client *c, int setfocus);
 static void unmanage(Client *c, int destroyed);
 static void unmapnotify(XEvent *e);
@@ -276,7 +273,7 @@ applyrules(Client *c)
 
 	/* rule matching */
 	c->isfloating = 0;
-	c->tags = 0;
+	c->wspace = 0;
 	XGetClassHint(dpy, c->win, &ch);
 	class    = ch.res_class ? ch.res_class : broken;
 	instance = ch.res_name  ? ch.res_name  : broken;
@@ -288,7 +285,7 @@ applyrules(Client *c)
 		&& (!r->instance || strstr(instance, r->instance)))
 		{
 			c->isfloating = r->isfloating;
-			c->tags |= r->tags;
+			c->wspace = r->wspace;
 			for (m = mons; m && m->num != r->monitor; m = m->next);
 			if (m)
 				c->mon = m;
@@ -298,7 +295,8 @@ applyrules(Client *c)
 		XFree(ch.res_class);
 	if (ch.res_name)
 		XFree(ch.res_name);
-	c->tags = c->tags & TAGMASK ? c->tags & TAGMASK : c->mon->tagset;
+	if (!c->wspace)
+		c->wspace = c->mon->wspace;
 }
 
 int
@@ -422,14 +420,15 @@ buttonpress(XEvent *e)
 		focus(NULL);
 	}
 	if (ev->window == selmon->barwin) {
-		i = x = 0;
+		x = 0;
+		i = 1;
 		do {
-			snprintf(s, sizeof s, "%d", i + 1);
+			snprintf(s, sizeof s, "%d", i);
 			x += TEXTW(s);
-		} while (ev->x >= x && ++i < 9);
-		if (i < 9) {
+		} while (ev->x >= x && ++i < 10);
+		if (i < 10) {
 			click = ClkTagBar;
-			arg.ui = 1 << i;
+			arg.ui = i;
 		} else if (ev->x < x + blw)
 			click = ClkLtSymbol;
 		else if (ev->x > selmon->ww - (int)TEXTW(stext))
@@ -462,11 +461,9 @@ checkotherwm(void)
 void
 cleanup(void)
 {
-	Arg a = {.ui = ~0};
 	Monitor *m;
 	size_t i;
 
-	view(&a);
 	for (m = mons; m; m = m->next)
 		while (m->stack)
 			unmanage(m->stack, 0);
@@ -624,7 +621,7 @@ createmon(void)
 	Monitor *m;
 
 	m = ecalloc(1, sizeof(Monitor));
-	m->tagset = 1;
+	m->wspace = 1;
 	m->tiled = 1;
 	m->mfact = mfact;
 	m->nmaster = nmaster;
@@ -699,19 +696,19 @@ drawbar(Monitor *m)
 	}
 
 	for (c = m->clients; c; c = c->next) {
-		occ |= c->tags;
+		occ |= 1 << c->wspace;
 		if (c->isurgent)
-			urg |= c->tags;
+			urg |= 1 << c->wspace;
 	}
 	x = 0;
-	for (i = 0; i < 9; i++) {
-		snprintf(s, sizeof s, "%d", i + 1);
+	for (i = 1; i < 10; i++) {
+		snprintf(s, sizeof s, "%d", i);
 		w = TEXTW(s);
-		drw_setscheme(drw, scheme[m->tagset & 1 << i ? SchemeSel : SchemeNorm]);
+		drw_setscheme(drw, scheme[m->wspace == i ? SchemeSel : SchemeNorm]);
 		drw_text(drw, x, 0, w, bh, lrpad / 2, s, urg & 1 << i);
 		if (occ & 1 << i)
 			drw_rect(drw, x + boxs, boxs, boxw, boxw,
-				m == selmon && selmon->sel && selmon->sel->tags & 1 << i,
+				m == selmon && selmon->sel && selmon->sel->wspace == i,
 				urg & 1 << i);
 		x += w;
 	}
@@ -1035,7 +1032,7 @@ manage(Window w, XWindowAttributes *wa)
 	updatetitle(c);
 	if (XGetTransientForHint(dpy, w, &trans) && (t = wintoclient(trans))) {
 		c->mon = t->mon;
-		c->tags = t->tags;
+		c->wspace = t->wspace;
 	} else {
 		c->mon = selmon;
 		applyrules(c);
@@ -1408,7 +1405,7 @@ sendmon(Client *c, Monitor *m)
 	detach(c);
 	detachstack(c);
 	c->mon = m;
-	c->tags = m->tagset; /* assign tags of target monitor */
+	c->wspace = m->wspace;
 	attach(c);
 	attachstack(c);
 	focus(NULL);
@@ -1633,8 +1630,8 @@ spawn(const Arg *arg)
 void
 tag(const Arg *arg)
 {
-	if (selmon->sel && arg->ui & TAGMASK) {
-		selmon->sel->tags = arg->ui & TAGMASK;
+	if (selmon->sel && 0 < arg->ui && arg->ui < 10) {
+		selmon->sel->wspace = arg->ui;
 		focus(NULL);
 		arrange(selmon);
 	}
@@ -1700,21 +1697,6 @@ togglefloating(const Arg *arg)
 }
 
 void
-toggletag(const Arg *arg)
-{
-	unsigned int newtags;
-
-	if (!selmon->sel)
-		return;
-	newtags = selmon->sel->tags ^ (arg->ui & TAGMASK);
-	if (newtags) {
-		selmon->sel->tags = newtags;
-		focus(NULL);
-		arrange(selmon);
-	}
-}
-
-void
 toggletiled(const Arg *arg)
 {
 	selmon->tiled ^= 1;
@@ -1722,18 +1704,6 @@ toggletiled(const Arg *arg)
 		arrange(selmon);
 	else
 		drawbar(selmon);
-}
-
-void
-toggleview(const Arg *arg)
-{
-	unsigned int newtagset = selmon->tagset ^ (arg->ui & TAGMASK);
-
-	if (newtagset) {
-		selmon->tagset = newtagset;
-		focus(NULL);
-		arrange(selmon);
-	}
 }
 
 void
@@ -2025,10 +1995,10 @@ updatewmhints(Client *c)
 void
 view(const Arg *arg)
 {
-	if ((arg->ui & TAGMASK) == selmon->tagset)
+	if (arg->ui == selmon->wspace)
 		return;
-	if (arg->ui & TAGMASK)
-		selmon->tagset = arg->ui & TAGMASK;
+	if (0 < arg->ui && arg->ui < 10)
+		selmon->wspace = arg->ui;
 	focus(NULL);
 	arrange(selmon);
 }
