@@ -54,7 +54,7 @@
 #define MOUSEMASK               (BUTTONMASK|PointerMotionMask)
 #define WIDTH(X)                ((X)->w + 2 * (X)->bw)
 #define HEIGHT(X)               ((X)->h + 2 * (X)->bw)
-#define TAGMASK                 ((1 << LENGTH(tags)) - 1)
+#define TAGMASK                 ((1 << 9) - 1)
 #define TEXTW(X)                (drw_fontset_getwidth(drw, (X)) + lrpad)
 
 /* enums */
@@ -264,9 +264,6 @@ static Window root, wmcheckwin;
 /* configuration, allows nested code to access above variables */
 #include "config.h"
 
-/* compile-time check if all tags fit into an unsigned int bit array. */
-struct NumTags { char limitexceeded[LENGTH(tags) > 31 ? -1 : 1]; };
-
 /* function implementations */
 void
 applyrules(Client *c)
@@ -412,6 +409,7 @@ buttonpress(XEvent *e)
 {
 	unsigned int i, x, click;
 	Arg arg = {0};
+	char s[16];
 	Client *c;
 	Monitor *m;
 	XButtonPressedEvent *ev = &e->xbutton;
@@ -425,10 +423,11 @@ buttonpress(XEvent *e)
 	}
 	if (ev->window == selmon->barwin) {
 		i = x = 0;
-		do
-			x += TEXTW(tags[i]);
-		while (ev->x >= x && ++i < LENGTH(tags));
-		if (i < LENGTH(tags)) {
+		do {
+			snprintf(s, sizeof s, "%d", i + 1);
+			x += TEXTW(s);
+		} while (ev->x >= x && ++i < 9);
+		if (i < 9) {
 			click = ClkTagBar;
 			arg.ui = 1 << i;
 		} else if (ev->x < x + blw)
@@ -689,7 +688,7 @@ drawbar(Monitor *m)
 	int boxs = drw->fonts->h / 9;
 	int boxw = drw->fonts->h / 6 + 2;
 	unsigned int i, occ = 0, urg = 0;
-	char cnum[32];
+	char s[32];
 	Client *c;
 
 	/* draw status first so it can be overdrawn by tags later */
@@ -705,10 +704,11 @@ drawbar(Monitor *m)
 			urg |= c->tags;
 	}
 	x = 0;
-	for (i = 0; i < LENGTH(tags); i++) {
-		w = TEXTW(tags[i]);
+	for (i = 0; i < 9; i++) {
+		snprintf(s, sizeof s, "%d", i + 1);
+		w = TEXTW(s);
 		drw_setscheme(drw, scheme[m->tagset & 1 << i ? SchemeSel : SchemeNorm]);
-		drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], urg & 1 << i);
+		drw_text(drw, x, 0, w, bh, lrpad / 2, s, urg & 1 << i);
 		if (occ & 1 << i)
 			drw_rect(drw, x + boxs, boxs, boxw, boxw,
 				m == selmon && selmon->sel && selmon->sel->tags & 1 << i,
@@ -724,10 +724,10 @@ drawbar(Monitor *m)
 				k = n;
 		}
 	if (n) {
-		snprintf(cnum, sizeof cnum, "  %d/%d  ", k, n);
-		w = blw = TEXTW(cnum);
+		snprintf(s, sizeof s, "  %d/%d  ", k, n);
+		w = blw = TEXTW(s);
 		drw_setscheme(drw, scheme[SchemeNorm]);
-		x = drw_text(drw, x, 0, w, bh, lrpad / 2, cnum, 0);
+		x = drw_text(drw, x, 0, w, bh, lrpad / 2, s, 0);
 	}
 
 	if ((w = m->ww - tw - x) > bh) {
