@@ -106,13 +106,8 @@ typedef struct {
 	const Arg arg;
 } Key;
 
-typedef struct {
-	const char *symbol;
-	void (*arrange)(Monitor *);
-} Layout;
-
 struct Monitor {
-	char ltsymbol[16];
+	int tiled;
 	float mfact;
 	int nmaster;
 	int num;
@@ -127,7 +122,6 @@ struct Monitor {
 	Client *stack;
 	Monitor *next;
 	Window barwin;
-	const Layout *lt;
 };
 
 typedef struct {
@@ -198,7 +192,6 @@ static void sendmon(Client *c, Monitor *m);
 static void setclientstate(Client *c, long state);
 static void setfocus(Client *c);
 static void setfullscreen(Client *c, int fullscreen);
-static void setlayout(const Arg *arg);
 static void setmfact(const Arg *arg);
 static void setup(void);
 static void seturgent(Client *c, int urg);
@@ -211,6 +204,7 @@ static void tile(Monitor *);
 static void togglebar(const Arg *arg);
 static void togglefloating(const Arg *arg);
 static void toggletag(const Arg *arg);
+static void toggletiled(const Arg *arg);
 static void toggleview(const Arg *arg);
 static void unfocus(Client *c, int setfocus);
 static void unmanage(Client *c, int destroyed);
@@ -393,8 +387,10 @@ arrange(Monitor *m)
 void
 arrangemon(Monitor *m)
 {
-	strncpy(m->ltsymbol, m->lt->symbol, sizeof m->ltsymbol);
-	m->lt->arrange(m);
+	if (m->tiled)
+		tile(m);
+	else
+		monocle(m);
 }
 
 void
@@ -468,12 +464,10 @@ void
 cleanup(void)
 {
 	Arg a = {.ui = ~0};
-	Layout foo = { "", NULL };
 	Monitor *m;
 	size_t i;
 
 	view(&a);
-	selmon->lt = &foo;
 	for (m = mons; m; m = m->next)
 		while (m->stack)
 			unmanage(m->stack, 0);
@@ -632,12 +626,11 @@ createmon(void)
 
 	m = ecalloc(1, sizeof(Monitor));
 	m->tagset = 1;
+	m->tiled = 1;
 	m->mfact = mfact;
 	m->nmaster = nmaster;
 	m->showbar = showbar;
 	m->topbar = topbar;
-	m->lt = &layouts[0];
-	strncpy(m->ltsymbol, m->lt->symbol, sizeof m->ltsymbol);
 	return m;
 }
 
@@ -692,10 +685,11 @@ dirtomon(int dir)
 void
 drawbar(Monitor *m)
 {
-	int x, w, tw = 0;
+	int n, k, x, w, tw = 0;
 	int boxs = drw->fonts->h / 9;
 	int boxw = drw->fonts->h / 6 + 2;
 	unsigned int i, occ = 0, urg = 0;
+	char cnum[32];
 	Client *c;
 
 	/* draw status first so it can be overdrawn by tags later */
@@ -721,9 +715,20 @@ drawbar(Monitor *m)
 				urg & 1 << i);
 		x += w;
 	}
-	w = blw = TEXTW(m->ltsymbol);
-	drw_setscheme(drw, scheme[SchemeNorm]);
-	x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
+
+	n = k = 0;
+	for (c = m->clients; c; c = c->next)
+		if (ISVISIBLE(c)) {
+			n++;
+			if (c == m->sel)
+				k = n;
+		}
+	if (n) {
+		snprintf(cnum, sizeof cnum, "  %d/%d  ", k, n);
+		w = blw = TEXTW(cnum);
+		drw_setscheme(drw, scheme[SchemeNorm]);
+		x = drw_text(drw, x, 0, w, bh, lrpad / 2, cnum, 0);
+	}
 
 	if ((w = m->ww - tw - x) > bh) {
 		if (m->sel) {
@@ -1100,14 +1105,8 @@ maprequest(XEvent *e)
 void
 monocle(Monitor *m)
 {
-	unsigned int n = 0;
 	Client *c;
 
-	for (c = m->clients; c; c = c->next)
-		if (ISVISIBLE(c))
-			n++;
-	if (n > 0) /* override layout symbol */
-		snprintf(m->ltsymbol, sizeof m->ltsymbol, "[%d]", n);
 	for (c = nexttiled(m->clients); c; c = nexttiled(c->next))
 		resize(c, m->wx, m->wy, m->ww - 2 * c->bw, m->wh - 2 * c->bw, 0);
 }
@@ -1490,18 +1489,6 @@ setfullscreen(Client *c, int fullscreen)
 	}
 }
 
-void
-setlayout(const Arg *arg)
-{
-	if (arg && arg->v)
-		selmon->lt = (Layout *)arg->v;
-	strncpy(selmon->ltsymbol, selmon->lt->symbol, sizeof selmon->ltsymbol);
-	if (selmon->sel)
-		arrange(selmon);
-	else
-		drawbar(selmon);
-}
-
 /* arg > 1.0 will set mfact absolutely */
 void
 setmfact(const Arg *arg)
@@ -1725,6 +1712,16 @@ toggletag(const Arg *arg)
 		focus(NULL);
 		arrange(selmon);
 	}
+}
+
+void
+toggletiled(const Arg *arg)
+{
+	selmon->tiled ^= 1;
+	if (selmon->sel)
+		arrange(selmon);
+	else
+		drawbar(selmon);
 }
 
 void
