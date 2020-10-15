@@ -78,16 +78,11 @@ static Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_q,      quit,           {0} },
 };
 
-/* button definitions */
-/* click can be ClkTagBar, ClkLtSymbol, ClkStatusText, ClkWinTitle, ClkClientWin, or ClkRootWin */
+/* pointer buttons definitions */
 static Button buttons[] = {
-	/* click                event mask      button          function        argument */
-	{ ClkWinTitle,          0,              Button2,        zoom,           {0} },
-	{ ClkStatusText,        0,              Button2,        spawn,          {.v = termcmd } },
-	{ ClkClientWin,         MODKEY,         Button1,        movemouse,      {0} },
-	{ ClkClientWin,         MODKEY,         Button2,        togglefloating, {0} },
-	{ ClkClientWin,         MODKEY,         Button3,        resizemouse,    {0} },
-	{ ClkTagBar,            0,              Button1,        view,           {0} },
-	{ ClkTagBar,            MODKEY,         Button1,        move,           {0} },
+	/* event mask     button          function        argument */
+	{ MODKEY,         Button1,        movemouse,      {0} },
+	{ MODKEY,         Button2,        togglefloating, {0} },
+	{ MODKEY,         Button3,        resizemouse,    {0} },
 };
 
