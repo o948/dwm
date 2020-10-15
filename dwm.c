@@ -174,6 +174,8 @@ static void mappingnotify(XEvent *e);
 static void maprequest(XEvent *e);
 static void monocle(Monitor *m);
 static void motionnotify(XEvent *e);
+static void move(const Arg *arg);
+static void movemon(const Arg *arg);
 static void movemouse(const Arg *arg);
 static Client *nexttiled(Client *c);
 static void pop(Client *);
@@ -197,8 +199,6 @@ static void seturgent(Client *c, int urg);
 static void showhide(Client *c);
 static void sigchld(int unused);
 static void spawn(const Arg *arg);
-static void tag(const Arg *arg);
-static void tagmon(const Arg *arg);
 static void tile(Monitor *);
 static void togglebar(const Arg *arg);
 static void togglefloating(const Arg *arg);
@@ -1126,6 +1126,24 @@ motionnotify(XEvent *e)
 }
 
 void
+move(const Arg *arg)
+{
+	if (selmon->sel && 0 < arg->ui && arg->ui < 10) {
+		selmon->sel->wspace = arg->ui;
+		focus(NULL);
+		arrange(selmon);
+	}
+}
+
+void
+movemon(const Arg *arg)
+{
+	if (!selmon->sel || !mons->next)
+		return;
+	sendmon(selmon->sel, dirtomon(arg->i));
+}
+
+void
 movemouse(const Arg *arg)
 {
 	int x, y, ocx, ocy, nx, ny;
@@ -1625,24 +1643,6 @@ spawn(const Arg *arg)
 		perror(" failed");
 		exit(EXIT_SUCCESS);
 	}
-}
-
-void
-tag(const Arg *arg)
-{
-	if (selmon->sel && 0 < arg->ui && arg->ui < 10) {
-		selmon->sel->wspace = arg->ui;
-		focus(NULL);
-		arrange(selmon);
-	}
-}
-
-void
-tagmon(const Arg *arg)
-{
-	if (!selmon->sel || !mons->next)
-		return;
-	sendmon(selmon->sel, dirtomon(arg->i));
 }
 
 void
