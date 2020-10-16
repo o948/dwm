@@ -66,7 +66,6 @@ enum { WMProtocols, WMDelete, WMState, WMTakeFocus, WMLast }; /* default atoms *
 
 typedef union {
 	int i;
-	unsigned int ui;
 	float f;
 	const void *v;
 } Arg;
@@ -1099,8 +1098,8 @@ motionnotify(XEvent *e)
 void
 move(const Arg *arg)
 {
-	if (selmon->sel && 0 < arg->ui && arg->ui < 10) {
-		selmon->sel->wspace = arg->ui;
+	if (selmon->sel && 0 < arg->i && arg->i < 10) {
+		selmon->sel->wspace = arg->i;
 		focus(NULL);
 		arrange(selmon);
 	}
@@ -1966,10 +1965,10 @@ updatewmhints(Client *c)
 void
 view(const Arg *arg)
 {
-	if (arg->ui == selmon->wspace)
+	if (arg->i == selmon->wspace)
 		return;
-	if (0 < arg->ui && arg->ui < 10)
-		selmon->wspace = arg->ui;
+	if (0 < arg->i && arg->i < 10)
+		selmon->wspace = arg->i;
 	focus(NULL);
 	arrange(selmon);
 }

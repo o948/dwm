@@ -36,8 +36,8 @@ static const int resizehints = 1;    /* 1 means respect size hints in tiled resi
 /* key definitions */
 #define MODKEY Mod1Mask
 #define TAGKEYS(KEY,TAG) \
-	{ MODKEY,                       KEY,      view,           {.ui = TAG} }, \
-	{ MODKEY|ShiftMask,             KEY,      move,           {.ui = TAG} }, \
+	{ MODKEY,                       KEY,      view,           {.i = TAG} }, \
+	{ MODKEY|ShiftMask,             KEY,      move,           {.i = TAG} }, \
 
 /* helper for spawning shell commands in the pre dwm-5.0 fashion */
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
