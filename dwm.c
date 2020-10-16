@@ -661,7 +661,7 @@ drawbar(Monitor *m)
 	int n, k, x, w, tw = 0;
 	int boxs = drw->fonts->h / 9;
 	int boxw = drw->fonts->h / 6 + 2;
-	unsigned int i, occ = 0, urg = 0;
+	unsigned int i, has = 0, urg = 0;
 	char s[32];
 	Client *c;
 
@@ -672,23 +672,21 @@ drawbar(Monitor *m)
 		drw_text(drw, m->ww - tw, 0, tw, bh, 0, stext, 0);
 	}
 
+	has = 1 << m->wspace;
 	for (c = m->clients; c; c = c->next) {
-		occ |= 1 << c->wspace;
+		has |= 1 << c->wspace;
 		if (c->isurgent)
 			urg |= 1 << c->wspace;
 	}
 	x = 0;
-	for (i = 1; i < 10; i++) {
-		snprintf(s, sizeof s, "%d", i);
-		w = TEXTW(s);
-		drw_setscheme(drw, scheme[m->wspace == i ? SchemeSel : SchemeNorm]);
-		drw_text(drw, x, 0, w, bh, lrpad / 2, s, urg & 1 << i);
-		if (occ & 1 << i)
-			drw_rect(drw, x + boxs, boxs, boxw, boxw,
-				m == selmon && selmon->sel && selmon->sel->wspace == i,
-				urg & 1 << i);
-		x += w;
-	}
+	for (i = 1; i < 10; i++)
+		if (has & 1 << i) {
+			snprintf(s, sizeof s, "%d", i);
+			w = TEXTW(s);
+			drw_setscheme(drw, scheme[m->wspace == i ? SchemeSel : SchemeNorm]);
+			drw_text(drw, x, 0, w, bh, lrpad / 2, s, urg & 1 << i);
+			x += w;
+		}
 
 	n = k = 0;
 	for (c = m->clients; c; c = c->next)
