@@ -106,11 +106,10 @@ struct Monitor {
 	float mfact;
 	int nmaster;
 	int num;
-	int by;               /* bar geometry */
+	int by;               /* bar position */
 	int mx, my, mw, mh;   /* screen size */
 	int wx, wy, ww, wh;   /* window area  */
 	int wspace;
-	int topbar;
 	Client *clients;
 	Client *sel;
 	Client *stack;
@@ -200,7 +199,6 @@ static void toggletiled(const Arg *arg);
 static void unfocus(Client *c, int setfocus);
 static void unmanage(Client *c, int destroyed);
 static void unmapnotify(XEvent *e);
-static void updatebarpos(Monitor *m);
 static void updatebars(void);
 static void updateclientlist(void);
 static int updategeom(void);
@@ -599,7 +597,6 @@ createmon(void)
 	m->tiled = 1;
 	m->mfact = mfact;
 	m->nmaster = nmaster;
-	m->topbar = topbar;
 	return m;
 }
 
@@ -1739,15 +1736,6 @@ updatebars(void)
 }
 
 void
-updatebarpos(Monitor *m)
-{
-	m->wy = m->my;
-	m->wh = m->mh - bh;
-	m->by = m->topbar ? m->wy : m->wy + m->wh;
-	m->wy = m->topbar ? m->wy + bh : m->wy;
-}
-
-void
 updateclientlist()
 {
 	Client *c;
@@ -1801,7 +1789,8 @@ updategeom(void)
 					m->my = m->wy = unique[i].y_org;
 					m->mw = m->ww = unique[i].width;
 					m->mh = m->wh = unique[i].height;
-					updatebarpos(m);
+					m->wh -= bh;
+					m->by = m->wy + m->wh;
 				}
 		} else { /* less monitors available nn < n */
 			for (i = nn; i < n; i++) {
@@ -1829,7 +1818,8 @@ updategeom(void)
 			dirty = 1;
 			mons->mw = mons->ww = sw;
 			mons->mh = mons->wh = sh;
-			updatebarpos(mons);
+			mons->wh -= bh;
+			mons->by = mons->wh;
 		}
 	}
 	if (dirty) {
