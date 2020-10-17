@@ -21,12 +21,6 @@ static const Rule rules[] = {
 	{ "Firefox",  NULL,       NULL,       9,            0,           -1 },
 };
 
-/* key definitions */
-#define MODKEY Mod1Mask
-#define TAGKEYS(KEY,TAG) \
-	{ MODKEY,                       KEY,      view,           TAG }, \
-	{ MODKEY|ShiftMask,             KEY,      move,           TAG }, \
-
 /* commands */
 #define SPAWN(...) spawn((const char*[]){ __VA_ARGS__, NULL })
 void spawnmenu(int unused) {
@@ -41,8 +35,22 @@ void spawnterm(int unused) {
 	SPAWN("st");
 }
 
+/* key definitions */
+#define MODKEY Mod1Mask
+#define WSPACEKEYS(KEY, WSPACE) \
+	{ MODKEY,                       KEY,       view,           WSPACE }, \
+	{ MODKEY|ShiftMask,             KEY,       move,           WSPACE },
 static Key keys[] = {
 	/* modifier                     key        function        argument */
+	WSPACEKEYS(                     XK_1,                      1)
+	WSPACEKEYS(                     XK_2,                      2)
+	WSPACEKEYS(                     XK_3,                      3)
+	WSPACEKEYS(                     XK_4,                      4)
+	WSPACEKEYS(                     XK_5,                      5)
+	WSPACEKEYS(                     XK_6,                      6)
+	WSPACEKEYS(                     XK_7,                      7)
+	WSPACEKEYS(                     XK_8,                      8)
+	WSPACEKEYS(                     XK_9,                      9)
 	{ MODKEY,                       XK_p,      spawnmenu,      0 },
 	{ MODKEY|ShiftMask,             XK_Return, spawnterm,      0 },
 	{ MODKEY,                       XK_j,      focusstack,     +1 },
@@ -59,15 +67,6 @@ static Key keys[] = {
 	{ MODKEY,                       XK_period, focusmon,       +1 },
 	{ MODKEY|ShiftMask,             XK_comma,  movemon,        -1 },
 	{ MODKEY|ShiftMask,             XK_period, movemon,        +1 },
-	TAGKEYS(                        XK_1,                      1)
-	TAGKEYS(                        XK_2,                      2)
-	TAGKEYS(                        XK_3,                      3)
-	TAGKEYS(                        XK_4,                      4)
-	TAGKEYS(                        XK_5,                      5)
-	TAGKEYS(                        XK_6,                      6)
-	TAGKEYS(                        XK_7,                      7)
-	TAGKEYS(                        XK_8,                      8)
-	TAGKEYS(                        XK_9,                      9)
 	{ MODKEY|ShiftMask,             XK_q,      quit,           0 },
 };
 
