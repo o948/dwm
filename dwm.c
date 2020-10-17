@@ -96,9 +96,9 @@ typedef struct {
 } Key;
 
 struct Monitor {
-	int tiled;
-	float colw;
-	int nrows;
+	unsigned int tiled;
+	float colw[10];
+	int nrows[10];
 	int num;
 	int by;               /* bar position */
 	int mx, my, mw, mh;   /* screen size */
@@ -368,7 +368,7 @@ arrange(Monitor *m)
 void
 arrangemon(Monitor *m)
 {
-	if (m->tiled)
+	if (m->tiled & 1 << m->wspace)
 		tile(m);
 	else
 		monocle(m);
@@ -584,13 +584,16 @@ configurerequest(XEvent *e)
 Monitor *
 createmon(void)
 {
+	int i;
 	Monitor *m;
 
 	m = ecalloc(1, sizeof(Monitor));
 	m->wspace = 1;
-	m->tiled = 1;
-	m->colw = 0.5;
-	m->nrows = 1;
+	m->tiled = ~0;
+	for (i = 1; i < 10; i++) {
+		m->colw[i] = 0.5;
+		m->nrows[i] = 1;
+	}
 	return m;
 }
 
@@ -1393,7 +1396,8 @@ setclientstate(Client *c, long state)
 void
 setcolw(int inc)
 {
-	selmon->colw = MAX(0.05, MIN(0.95, selmon->colw + inc * dcolw));
+	selmon->colw[selmon->wspace] = MAX(0.05, MIN(0.95,
+		selmon->colw[selmon->wspace] + inc * dcolw));
 	arrange(selmon);
 }
 
@@ -1465,7 +1469,7 @@ setfullscreen(Client *c, int fullscreen)
 void
 setnrows(int inc)
 {
-	selmon->nrows = MAX(0, selmon->nrows + inc);
+	selmon->nrows[selmon->wspace] = MAX(0, selmon->nrows[selmon->wspace] + inc);
 	arrange(selmon);
 }
 
@@ -1603,13 +1607,13 @@ tile(Monitor *m)
 	if (n == 0)
 		return;
 
-	if (n > m->nrows)
-		mw = m->nrows ? m->ww * m->colw : 0;
+	if (n > m->nrows[m->wspace])
+		mw = m->nrows[m->wspace] ? m->ww * m->colw[m->wspace] : 0;
 	else
 		mw = m->ww;
 	for (i = my = ty = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++)
-		if (i < m->nrows) {
-			h = (m->wh - my) / (MIN(n, m->nrows) - i);
+		if (i < m->nrows[m->wspace]) {
+			h = (m->wh - my) / (MIN(n, m->nrows[m->wspace]) - i);
 			resize(c, m->wx, m->wy + my, mw - (2*c->bw), h - (2*c->bw), 0);
 			if (my + HEIGHT(c) < m->wh)
 				my += HEIGHT(c);
@@ -1638,7 +1642,7 @@ togglefloating(int unused)
 void
 toggletiled(int unused)
 {
-	selmon->tiled ^= 1;
+	selmon->tiled ^= 1 << selmon->wspace;
 	if (selmon->sel)
 		arrange(selmon);
 	else
