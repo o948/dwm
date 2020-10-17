@@ -191,7 +191,7 @@ static void setup(void);
 static void seturgent(Client *c, int urg);
 static void showhide(Client *c);
 static void sigchld(int unused);
-static void spawn(const Arg *arg);
+static void spawn(const char *argv[]);
 static void tile(Monitor *);
 static void togglefloating(const Arg *arg);
 static void toggletiled(const Arg *arg);
@@ -1585,16 +1585,14 @@ sigchld(int unused)
 }
 
 void
-spawn(const Arg *arg)
+spawn(const char *argv[])
 {
-	if (arg->v == dmenucmd)
-		dmenumon[0] = '0' + selmon->num;
 	if (fork() == 0) {
 		if (dpy)
 			close(ConnectionNumber(dpy));
 		setsid();
-		execvp(((char **)arg->v)[0], (char **)arg->v);
-		fprintf(stderr, "dwm: execvp %s", ((char **)arg->v)[0]);
+		execvp(argv[0], (char **)argv);
+		fprintf(stderr, "dwm: execvp %s", argv[0]);
 		perror(" failed");
 		exit(EXIT_SUCCESS);
 	}

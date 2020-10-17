@@ -4,16 +4,10 @@
 static const unsigned int borderpx  = 1;        /* border pixel of windows */
 static const unsigned int snap      = 32;       /* snap pixel */
 static const char *fonts[]          = { "monospace:size=10" };
-static const char dmenufont[]       = "monospace:size=10";
-static const char col_gray1[]       = "#222222";
-static const char col_gray2[]       = "#444444";
-static const char col_gray3[]       = "#bbbbbb";
-static const char col_gray4[]       = "#eeeeee";
-static const char col_cyan[]        = "#005577";
 static const char *colors[][3]      = {
 	/*               fg         bg         border   */
-	[SchemeNorm] = { col_gray3, col_gray1, col_gray2 },
-	[SchemeSel]  = { col_gray4, col_cyan,  col_cyan  },
+	[SchemeNorm] = { "#bbbbbb", "#222222", "#444444" },
+	[SchemeSel]  = { "#eeeeee", "#005577", "#005577" },
 };
 static const float dcolw = 0.05;  /* increment of first column's width */
 
@@ -33,18 +27,24 @@ static const Rule rules[] = {
 	{ MODKEY,                       KEY,      view,           {.i = TAG} }, \
 	{ MODKEY|ShiftMask,             KEY,      move,           {.i = TAG} }, \
 
-/* helper for spawning shell commands in the pre dwm-5.0 fashion */
-#define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
-
 /* commands */
-static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
-static const char *dmenucmd[] = { "dmenu_run", "-b", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
-static const char *termcmd[]  = { "st", NULL };
+void spawnmenu(const Arg *arg) {
+	char num[] = "0";
+
+	num[0] += selmon->num;
+	spawn((const char*[]){ "dmenu_run", "-b", "-m", num, "-fn", fonts[0],
+		"-nf", colors[SchemeNorm][0], "-nb", colors[SchemeNorm][1],
+		"-sf", colors[SchemeSel][0], "-sb", colors[SchemeSel][1], NULL
+	});
+}
+void spawnterm(const Arg *arg) {
+	spawn((const char*[]){ "st", NULL });
+}
 
 static Key keys[] = {
 	/* modifier                     key        function        argument */
-	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
-	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
+	{ MODKEY,                       XK_p,      spawnmenu,      {0} },
+	{ MODKEY|ShiftMask,             XK_Return, spawnterm,      {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
 	{ MODKEY,                       XK_i,      setnrows,       {.i = +1 } },
