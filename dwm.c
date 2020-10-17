@@ -110,7 +110,6 @@ struct Monitor {
 	int mx, my, mw, mh;   /* screen size */
 	int wx, wy, ww, wh;   /* window area  */
 	int wspace;
-	int showbar;
 	int topbar;
 	Client *clients;
 	Client *sel;
@@ -196,7 +195,6 @@ static void showhide(Client *c);
 static void sigchld(int unused);
 static void spawn(const Arg *arg);
 static void tile(Monitor *);
-static void togglebar(const Arg *arg);
 static void togglefloating(const Arg *arg);
 static void toggletiled(const Arg *arg);
 static void unfocus(Client *c, int setfocus);
@@ -601,7 +599,6 @@ createmon(void)
 	m->tiled = 1;
 	m->mfact = mfact;
 	m->nmaster = nmaster;
-	m->showbar = showbar;
 	m->topbar = topbar;
 	return m;
 }
@@ -1644,15 +1641,6 @@ tile(Monitor *m)
 }
 
 void
-togglebar(const Arg *arg)
-{
-	selmon->showbar = !selmon->showbar;
-	updatebarpos(selmon);
-	XMoveResizeWindow(dpy, selmon->barwin, selmon->wx, selmon->by, selmon->ww, bh);
-	arrange(selmon);
-}
-
-void
 togglefloating(const Arg *arg)
 {
 	if (!selmon->sel)
@@ -1754,13 +1742,9 @@ void
 updatebarpos(Monitor *m)
 {
 	m->wy = m->my;
-	m->wh = m->mh;
-	if (m->showbar) {
-		m->wh -= bh;
-		m->by = m->topbar ? m->wy : m->wy + m->wh;
-		m->wy = m->topbar ? m->wy + bh : m->wy;
-	} else
-		m->by = -bh;
+	m->wh = m->mh - bh;
+	m->by = m->topbar ? m->wy : m->wy + m->wh;
+	m->wy = m->topbar ? m->wy + bh : m->wy;
 }
 
 void
