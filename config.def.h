@@ -24,41 +24,41 @@ static const Rule rules[] = {
 /* key definitions */
 #define MODKEY Mod1Mask
 #define TAGKEYS(KEY,TAG) \
-	{ MODKEY,                       KEY,      view,           {.i = TAG} }, \
-	{ MODKEY|ShiftMask,             KEY,      move,           {.i = TAG} }, \
+	{ MODKEY,                       KEY,      view,           TAG }, \
+	{ MODKEY|ShiftMask,             KEY,      move,           TAG }, \
 
 /* commands */
-void spawnmenu(const Arg *arg) {
+#define SPAWN(...) spawn((const char*[]){ __VA_ARGS__, NULL })
+void spawnmenu(int unused) {
 	char num[] = "0";
 
 	num[0] += selmon->num;
-	spawn((const char*[]){ "dmenu_run", "-b", "-m", num, "-fn", fonts[0],
+	SPAWN("dmenu_run", "-b", "-m", num, "-fn", fonts[0],
 		"-nf", colors[SchemeNorm][0], "-nb", colors[SchemeNorm][1],
-		"-sf", colors[SchemeSel][0], "-sb", colors[SchemeSel][1], NULL
-	});
+		"-sf", colors[SchemeSel][0], "-sb", colors[SchemeSel][1]);
 }
-void spawnterm(const Arg *arg) {
-	spawn((const char*[]){ "st", NULL });
+void spawnterm(int unused) {
+	SPAWN("st");
 }
 
 static Key keys[] = {
 	/* modifier                     key        function        argument */
-	{ MODKEY,                       XK_p,      spawnmenu,      {0} },
-	{ MODKEY|ShiftMask,             XK_Return, spawnterm,      {0} },
-	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
-	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
-	{ MODKEY,                       XK_i,      setnrows,       {.i = +1 } },
-	{ MODKEY,                       XK_d,      setnrows,       {.i = -1 } },
-	{ MODKEY,                       XK_h,      setcolw,        {.i = -1 } },
-	{ MODKEY,                       XK_l,      setcolw,        {.i = +1 } },
-	{ MODKEY,                       XK_Return, zoom,           {0} },
-	{ MODKEY|ShiftMask,             XK_c,      killclient,     {0} },
-	{ MODKEY,                       XK_Tab,    toggletiled,    {0} },
-	{ MODKEY|ShiftMask,             XK_space,  togglefloating, {0} },
-	{ MODKEY,                       XK_comma,  focusmon,       {.i = -1 } },
-	{ MODKEY,                       XK_period, focusmon,       {.i = +1 } },
-	{ MODKEY|ShiftMask,             XK_comma,  movemon,        {.i = -1 } },
-	{ MODKEY|ShiftMask,             XK_period, movemon,        {.i = +1 } },
+	{ MODKEY,                       XK_p,      spawnmenu,      0 },
+	{ MODKEY|ShiftMask,             XK_Return, spawnterm,      0 },
+	{ MODKEY,                       XK_j,      focusstack,     +1 },
+	{ MODKEY,                       XK_k,      focusstack,     -1 },
+	{ MODKEY,                       XK_i,      setnrows,       +1 },
+	{ MODKEY,                       XK_d,      setnrows,       -1 },
+	{ MODKEY,                       XK_h,      setcolw,        -1 },
+	{ MODKEY,                       XK_l,      setcolw,        +1 },
+	{ MODKEY,                       XK_Return, zoom,           0 },
+	{ MODKEY|ShiftMask,             XK_c,      killclient,     0 },
+	{ MODKEY,                       XK_Tab,    toggletiled,    0 },
+	{ MODKEY|ShiftMask,             XK_space,  togglefloating, 0 },
+	{ MODKEY,                       XK_comma,  focusmon,       -1 },
+	{ MODKEY,                       XK_period, focusmon,       +1 },
+	{ MODKEY|ShiftMask,             XK_comma,  movemon,        -1 },
+	{ MODKEY|ShiftMask,             XK_period, movemon,        +1 },
 	TAGKEYS(                        XK_1,                      1)
 	TAGKEYS(                        XK_2,                      2)
 	TAGKEYS(                        XK_3,                      3)
@@ -68,14 +68,14 @@ static Key keys[] = {
 	TAGKEYS(                        XK_7,                      7)
 	TAGKEYS(                        XK_8,                      8)
 	TAGKEYS(                        XK_9,                      9)
-	{ MODKEY|ShiftMask,             XK_q,      quit,           {0} },
+	{ MODKEY|ShiftMask,             XK_q,      quit,           0 },
 };
 
 /* pointer buttons definitions */
 static Button buttons[] = {
 	/* event mask     button          function        argument */
-	{ MODKEY,         Button1,        movemouse,      {0} },
-	{ MODKEY,         Button2,        togglefloating, {0} },
-	{ MODKEY,         Button3,        resizemouse,    {0} },
+	{ MODKEY,         Button1,        movemouse,      0 },
+	{ MODKEY,         Button2,        togglefloating, 0 },
+	{ MODKEY,         Button3,        resizemouse,    0 },
 };
 
