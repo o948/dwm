@@ -15,6 +15,7 @@ static const char *colors[][3]      = {
 	[SchemeNorm] = { col_gray3, col_gray1, col_gray2 },
 	[SchemeSel]  = { col_gray4, col_cyan,  col_cyan  },
 };
+static const float dcolw = 0.05;  /* increment of first column's width */
 
 static const Rule rules[] = {
 	/* xprop(1):
@@ -25,10 +26,6 @@ static const Rule rules[] = {
 	{ "Gimp",     NULL,       NULL,       1,            1,           -1 },
 	{ "Firefox",  NULL,       NULL,       9,            0,           -1 },
 };
-
-/* layout(s) */
-static const float mfact     = 0.55; /* factor of master area size [0.05..0.95] */
-static const int nmaster     = 1;    /* number of clients in master area */
 
 /* key definitions */
 #define MODKEY Mod1Mask
@@ -50,10 +47,10 @@ static Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
-	{ MODKEY,                       XK_i,      incnmaster,     {.i = +1 } },
-	{ MODKEY,                       XK_d,      incnmaster,     {.i = -1 } },
-	{ MODKEY,                       XK_h,      setmfact,       {.f = -0.05} },
-	{ MODKEY,                       XK_l,      setmfact,       {.f = +0.05} },
+	{ MODKEY,                       XK_i,      setnrows,       {.i = +1 } },
+	{ MODKEY,                       XK_d,      setnrows,       {.i = -1 } },
+	{ MODKEY,                       XK_h,      setcolw,        {.i = -1 } },
+	{ MODKEY,                       XK_l,      setcolw,        {.i = +1 } },
 	{ MODKEY,                       XK_Return, zoom,           {0} },
 	{ MODKEY|ShiftMask,             XK_c,      killclient,     {0} },
 	{ MODKEY,                       XK_Tab,    toggletiled,    {0} },

@@ -66,7 +66,6 @@ enum { WMProtocols, WMDelete, WMState, WMTakeFocus, WMLast }; /* default atoms *
 
 typedef union {
 	int i;
-	float f;
 	const void *v;
 } Arg;
 
@@ -103,8 +102,8 @@ typedef struct {
 
 struct Monitor {
 	int tiled;
-	float mfact;
-	int nmaster;
+	float colw;
+	int nrows;
 	int num;
 	int by;               /* bar position */
 	int mx, my, mw, mh;   /* screen size */
@@ -160,7 +159,6 @@ static long getstate(Window w);
 static int gettextprop(Window w, Atom atom, char *text, unsigned int size);
 static void grabbuttons(Client *c, int focused);
 static void grabkeys(void);
-static void incnmaster(const Arg *arg);
 static void keypress(XEvent *e);
 static void killclient(const Arg *arg);
 static void manage(Window w, XWindowAttributes *wa);
@@ -185,9 +183,10 @@ static void scan(void);
 static int sendevent(Client *c, Atom proto);
 static void sendmon(Client *c, Monitor *m);
 static void setclientstate(Client *c, long state);
+static void setcolw(const Arg *arg);
 static void setfocus(Client *c);
 static void setfullscreen(Client *c, int fullscreen);
-static void setmfact(const Arg *arg);
+static void setnrows(const Arg *arg);
 static void setup(void);
 static void seturgent(Client *c, int urg);
 static void showhide(Client *c);
@@ -595,8 +594,8 @@ createmon(void)
 	m = ecalloc(1, sizeof(Monitor));
 	m->wspace = 1;
 	m->tiled = 1;
-	m->mfact = mfact;
-	m->nmaster = nmaster;
+	m->colw = 0.5;
+	m->nrows = 1;
 	return m;
 }
 
@@ -924,13 +923,6 @@ grabkeys(void)
 					XGrabKey(dpy, code, keys[i].mod | modifiers[j], root,
 						True, GrabModeAsync, GrabModeAsync);
 	}
-}
-
-void
-incnmaster(const Arg *arg)
-{
-	selmon->nmaster = MAX(selmon->nmaster + arg->i, 0);
-	arrange(selmon);
 }
 
 #ifdef XINERAMA
@@ -1403,6 +1395,13 @@ setclientstate(Client *c, long state)
 		PropModeReplace, (unsigned char *)data, 2);
 }
 
+void
+setcolw(const Arg *arg)
+{
+	selmon->colw = MAX(0.05, MIN(0.95, selmon->colw + arg->i * dcolw));
+	arrange(selmon);
+}
+
 int
 sendevent(Client *c, Atom proto)
 {
@@ -1468,18 +1467,10 @@ setfullscreen(Client *c, int fullscreen)
 	}
 }
 
-/* arg > 1.0 will set mfact absolutely */
 void
-setmfact(const Arg *arg)
+setnrows(const Arg *arg)
 {
-	float f;
-
-	if (!arg)
-		return;
-	f = arg->f < 1.0 ? arg->f + selmon->mfact : arg->f - 1.0;
-	if (f < 0.05 || f > 0.95)
-		return;
-	selmon->mfact = f;
+	selmon->nrows = MAX(0, selmon->nrows + arg->i);
 	arrange(selmon);
 }
 
@@ -1619,13 +1610,13 @@ tile(Monitor *m)
 	if (n == 0)
 		return;
 
-	if (n > m->nmaster)
-		mw = m->nmaster ? m->ww * m->mfact : 0;
+	if (n > m->nrows)
+		mw = m->nrows ? m->ww * m->colw : 0;
 	else
 		mw = m->ww;
 	for (i = my = ty = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++)
-		if (i < m->nmaster) {
-			h = (m->wh - my) / (MIN(n, m->nmaster) - i);
+		if (i < m->nrows) {
+			h = (m->wh - my) / (MIN(n, m->nrows) - i);
 			resize(c, m->wx, m->wy + my, mw - (2*c->bw), h - (2*c->bw), 0);
 			if (my + HEIGHT(c) < m->wh)
 				my += HEIGHT(c);
