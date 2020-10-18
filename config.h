@@ -51,7 +51,7 @@ static Key keys[] = {
 	{ MODKEY|ControlMask, XK_h,      do_setcolw,       -1 },
 	{ MODKEY|ControlMask, XK_l,      do_setcolw,       +1 },
 	{ MODKEY,             XK_space,  do_togglefocus,    0 },
-	{ MODKEY|ShiftMask,   XK_space,  do_togglefloating, 0 },
+	{ MODKEY|ShiftMask,   XK_space,  do_togglefloating, 1 /* 1 = center */ },
 	{ MODKEY,             XK_j,      do_focus,         +1 },
 	{ MODKEY,             XK_k,      do_focus,         -1 },
 	{ MODKEY,             XK_h,      do_focus,         -2 },

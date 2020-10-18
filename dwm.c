@@ -122,7 +122,7 @@ static void do_movespace(int wspace);
 static void do_quit(int);
 static void do_setcolw(int inc);
 static void do_setnrows(int inc);
-static void do_togglefloating(int);
+static void do_togglefloating(int center);
 static void do_togglefocus(int);
 static void do_toggletiled(int);
 static void do_viewspace(int wspace);
@@ -460,16 +460,21 @@ do_setnrows(int inc)
 }
 
 void
-do_togglefloating(int unused)
+do_togglefloating(int center)
 {
 	if (!selmon->sel)
 		return;
 	if (selmon->sel->isfullscreen) /* no support for fullscreen windows */
 		return;
 	selmon->sel->isfloating = !selmon->sel->isfloating || selmon->sel->isfixed;
-	if (selmon->sel->isfloating)
+	if (selmon->sel->isfloating) {
+		if (center) {
+			selmon->sel->x = selmon->mx + (selmon->mw - WIDTH(selmon->sel)) / 2;
+			selmon->sel->y = selmon->my + (selmon->mh - HEIGHT(selmon->sel)) / 2;
+		}
 		resize(selmon->sel, selmon->sel->x, selmon->sel->y,
 			selmon->sel->w, selmon->sel->h, 0);
+	}
 	arrange(selmon);
 }
 
