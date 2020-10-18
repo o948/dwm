@@ -121,9 +121,9 @@ typedef struct {
 } Rule;
 
 /* function declarations */
+static void do_close(int);
 static void do_focusmon(int dir);
 static void do_focusstack(int dir);
-static void do_killclient(int);
 static void do_mousemove(int);
 static void do_mouseresize(int);
 static void do_movemon(int dir);
@@ -253,6 +253,22 @@ static Window root, wmcheckwin;
 
 /* function implementations */
 void
+do_close(int unused)
+{
+	if (!selmon->sel)
+		return;
+	if (!sendevent(selmon->sel, wmatom[WMDelete])) {
+		XGrabServer(dpy);
+		XSetErrorHandler(xerrordummy);
+		XSetCloseDownMode(dpy, DestroyAll);
+		XKillClient(dpy, selmon->sel->win);
+		XSync(dpy, False);
+		XSetErrorHandler(xerror);
+		XUngrabServer(dpy);
+	}
+}
+
+void
 do_focusmon(int dir)
 {
 	Monitor *m;
@@ -298,22 +314,6 @@ do_focusstack(int dir)
 	if (c) {
 		focus(c);
 		restack(selmon);
-	}
-}
-
-void
-do_killclient(int unused)
-{
-	if (!selmon->sel)
-		return;
-	if (!sendevent(selmon->sel, wmatom[WMDelete])) {
-		XGrabServer(dpy);
-		XSetErrorHandler(xerrordummy);
-		XSetCloseDownMode(dpy, DestroyAll);
-		XKillClient(dpy, selmon->sel->win);
-		XSync(dpy, False);
-		XSetErrorHandler(xerror);
-		XUngrabServer(dpy);
 	}
 }
 
