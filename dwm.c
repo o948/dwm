@@ -164,6 +164,7 @@ static void motionnotify(XEvent *e);
 static void move(int wspace);
 static void movemon(int dir);
 static void movemouse(int);
+static Client *nextfloating(Client *c);
 static Client *nexttiled(Client *c);
 static void pop(Client *);
 static void propertynotify(XEvent *e);
@@ -189,6 +190,7 @@ static void sigchld(int unused);
 static void spawn(const char *argv[]);
 static void tile(Monitor *);
 static void togglefloating(int);
+static void togglefocus(int);
 static void toggletiled(int);
 static void unfocus(Client *c, int setfocus);
 static void unmanage(Client *c, int destroyed);
@@ -794,21 +796,20 @@ void
 focusstack(int dir)
 {
 	Client *c = NULL, *i;
+	Client *(*next)(Client *);
 
 	if (!selmon->sel)
 		return;
+	next = selmon->sel->isfloating ? &nextfloating : &nexttiled;
 	if (dir > 0) {
-		for (c = selmon->sel->next; c && !ISVISIBLE(c); c = c->next);
+		c = next(selmon->sel->next);
 		if (!c)
-			for (c = selmon->clients; c && !ISVISIBLE(c); c = c->next);
+			c = next(selmon->clients);
 	} else {
-		for (i = selmon->clients; i != selmon->sel; i = i->next)
-			if (ISVISIBLE(i))
-				c = i;
+		for (i = next(selmon->clients); i != selmon->sel; i = next(i->next))
+			c = i;
 		if (!c)
-			for (; i; i = i->next)
-				if (ISVISIBLE(i))
-					c = i;
+			c = next(selmon->sel->next);
 	}
 	if (c) {
 		focus(c);
@@ -1154,6 +1155,13 @@ movemouse(int unused)
 		selmon = m;
 		focus(NULL);
 	}
+}
+
+Client *
+nextfloating(Client *c)
+{
+	for (; c && (!c->isfloating || !ISVISIBLE(c)); c = c->next);
+	return c;
 }
 
 Client *
@@ -1637,6 +1645,17 @@ togglefloating(int unused)
 		resize(selmon->sel, selmon->sel->x, selmon->sel->y,
 			selmon->sel->w, selmon->sel->h, 0);
 	arrange(selmon);
+}
+
+void
+togglefocus(int unused)
+{
+	Client *c = !selmon->sel || selmon->sel->isfloating
+		? nexttiled(selmon->clients) : nextfloating(selmon->clients);
+	if (c) {
+		focus(c);
+		restack(selmon);
+	}
 }
 
 void
