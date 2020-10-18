@@ -58,6 +58,10 @@ static Key keys[] = {
 	{ MODKEY,             XK_l,      do_focus,         +2 },
 	{ MODKEY,             XK_period, do_focusmon,      +1 },
 	{ MODKEY,             XK_comma,  do_focusmon,      -1 },
+	{ MODKEY|ShiftMask,   XK_j,      do_move,          +1 },
+	{ MODKEY|ShiftMask,   XK_k,      do_move,          -1 },
+	{ MODKEY|ShiftMask,   XK_h,      do_move,          -2 },
+	{ MODKEY|ShiftMask,   XK_l,      do_move,          +2 },
 	{ MODKEY|ShiftMask,   XK_comma,  do_movemon,       -1 },
 	{ MODKEY|ShiftMask,   XK_period, do_movemon,       +1 },
 };

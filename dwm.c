@@ -117,6 +117,7 @@ static void do_focus(int dir);
 static void do_focusmon(int dir);
 static void do_mousemove(int);
 static void do_mouseresize(int);
+static void do_move(int dir);
 static void do_movemon(int dir);
 static void do_movespace(int wspace);
 static void do_quit(int);
@@ -418,6 +419,44 @@ do_mouseresize(int unused)
 		selmon = m;
 		focus(NULL);
 	}
+}
+
+void
+do_move(int dir)
+{
+	Client *sel = selmon->sel, *c = NULL, *i;
+
+	if (!sel || sel->isfloating)
+		return;
+	switch (dir) {
+	case +1:   /* swap with next */
+		c = nexttiled(sel->next);
+		if (c) {
+			detach(sel);
+			sel->next = c->next;
+			c->next = sel;
+		}
+		break;
+	case -1:   /* swap with previous */
+		for (i = nexttiled(selmon->clients); i && i != sel; i = nexttiled(i->next))
+			c = i;
+		if (c) {
+			detach(c);
+			c->next = sel->next;
+			sel->next = c;
+		}
+		break;
+	case +2:   /* move to last */
+		detach(sel);
+		attach(sel);
+		break;
+	case -2:   /* move to first */
+		detach(sel);
+		sel->next = selmon->clients;
+		selmon->clients = sel;
+		break;
+	}
+	arrange(selmon);
 }
 
 void
