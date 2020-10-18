@@ -124,9 +124,9 @@ typedef struct {
 static void do_focusmon(int dir);
 static void do_focusstack(int dir);
 static void do_killclient(int);
-static void do_move(int wspace);
 static void do_movemon(int dir);
 static void do_movemouse(int);
+static void do_movespace(int wspace);
 static void do_quit(int);
 static void do_resizemouse(int);
 static void do_setcolw(int inc);
@@ -134,7 +134,7 @@ static void do_setnrows(int inc);
 static void do_togglefloating(int);
 static void do_togglefocus(int);
 static void do_toggletiled(int);
-static void do_view(int wspace);
+static void do_viewspace(int wspace);
 static void do_zoom(int);
 
 static void on_buttonpress(XEvent *e);
@@ -318,16 +318,6 @@ do_killclient(int unused)
 }
 
 void
-do_move(int wspace)
-{
-	if (selmon->sel && 0 < wspace && wspace < 10) {
-		selmon->sel->wspace = wspace;
-		focus(NULL);
-		arrange(selmon);
-	}
-}
-
-void
 do_movemon(int dir)
 {
 	if (!selmon->sel || !mons->next)
@@ -391,6 +381,16 @@ do_movemouse(int unused)
 		sendmon(c, m);
 		selmon = m;
 		focus(NULL);
+	}
+}
+
+void
+do_movespace(int wspace)
+{
+	if (selmon->sel && 0 < wspace && wspace < 10) {
+		selmon->sel->wspace = wspace;
+		focus(NULL);
+		arrange(selmon);
 	}
 }
 
@@ -507,7 +507,7 @@ do_toggletiled(int unused)
 }
 
 void
-do_view(int wspace)
+do_viewspace(int wspace)
 {
 	if (wspace == selmon->wspace)
 		return;

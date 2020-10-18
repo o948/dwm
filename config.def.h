@@ -38,8 +38,8 @@ void do_spawnterm(int unused) {
 /* key definitions */
 #define MODKEY Mod1Mask
 #define WSPACEKEYS(KEY, WSPACE) \
-	{ MODKEY,                       KEY,       do_view,        WSPACE }, \
-	{ MODKEY|ShiftMask,             KEY,       do_move,        WSPACE },
+	{ MODKEY,                       KEY,       do_viewspace,   WSPACE }, \
+	{ MODKEY|ShiftMask,             KEY,       do_movespace,   WSPACE },
 static Key keys[] = {
 	/* modifier                     key        function        argument */
 	WSPACEKEYS(                     XK_1,                      1)
