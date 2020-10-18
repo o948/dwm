@@ -122,8 +122,8 @@ typedef struct {
 
 /* function declarations */
 static void do_close(int);
+static void do_focus(int dir);
 static void do_focusmon(int dir);
-static void do_focusstack(int dir);
 static void do_mousemove(int);
 static void do_mouseresize(int);
 static void do_movemon(int dir);
@@ -269,21 +269,7 @@ do_close(int unused)
 }
 
 void
-do_focusmon(int dir)
-{
-	Monitor *m;
-
-	if (!mons->next)
-		return;
-	if ((m = dirtomon(dir)) == selmon)
-		return;
-	unfocus(selmon->sel, 0);
-	selmon = m;
-	focus(NULL);
-}
-
-void
-do_focusstack(int dir)
+do_focus(int dir)
 {
 	Client *c = NULL, *i;
 	Client *(*next)(Client *);
@@ -315,6 +301,20 @@ do_focusstack(int dir)
 		focus(c);
 		restack(selmon);
 	}
+}
+
+void
+do_focusmon(int dir)
+{
+	Monitor *m;
+
+	if (!mons->next)
+		return;
+	if ((m = dirtomon(dir)) == selmon)
+		return;
+	unfocus(selmon->sel, 0);
+	selmon = m;
+	focus(NULL);
 }
 
 void
