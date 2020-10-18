@@ -126,7 +126,6 @@ static void do_togglefloating(int);
 static void do_togglefocus(int);
 static void do_toggletiled(int);
 static void do_viewspace(int wspace);
-static void do_zoom(int);
 
 static void on_buttonpress(XEvent *e);
 static void on_clientmessage(XEvent *e);
@@ -169,7 +168,6 @@ static void manage(Window w, XWindowAttributes *wa);
 static void monocle(Monitor *m);
 static Client *nextfloating(Client *c);
 static Client *nexttiled(Client *c);
-static void pop(Client *);
 static Monitor *recttomon(int x, int y, int w, int h);
 static void resize(Client *c, int x, int y, int w, int h, int interact);
 static void resizeclient(Client *c, int x, int y, int w, int h);
@@ -505,19 +503,6 @@ do_viewspace(int wspace)
 		selmon->wspace = wspace;
 	focus(NULL);
 	arrange(selmon);
-}
-
-void
-do_zoom(int unused)
-{
-	Client *c = selmon->sel;
-
-	if (selmon->sel && selmon->sel->isfloating)
-		return;
-	if (c == nexttiled(selmon->clients))
-		if (!c || !(c = nexttiled(c->next)))
-			return;
-	pop(c);
 }
 
 void
@@ -1322,15 +1307,6 @@ nexttiled(Client *c)
 {
 	for (; c && (c->isfloating || !ISVISIBLE(c)); c = c->next);
 	return c;
-}
-
-void
-pop(Client *c)
-{
-	detach(c);
-	attach(c);
-	focus(c);
-	arrange(c->mon);
 }
 
 Monitor *
