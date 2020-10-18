@@ -124,11 +124,11 @@ typedef struct {
 static void do_focusmon(int dir);
 static void do_focusstack(int dir);
 static void do_killclient(int);
+static void do_mousemove(int);
+static void do_mouseresize(int);
 static void do_movemon(int dir);
-static void do_movemouse(int);
 static void do_movespace(int wspace);
 static void do_quit(int);
-static void do_resizemouse(int);
 static void do_setcolw(int inc);
 static void do_setnrows(int inc);
 static void do_togglefloating(int);
@@ -318,15 +318,7 @@ do_killclient(int unused)
 }
 
 void
-do_movemon(int dir)
-{
-	if (!selmon->sel || !mons->next)
-		return;
-	sendmon(selmon->sel, dirtomon(dir));
-}
-
-void
-do_movemouse(int unused)
+do_mousemove(int unused)
 {
 	int x, y, ocx, ocy, nx, ny;
 	Client *c;
@@ -385,23 +377,7 @@ do_movemouse(int unused)
 }
 
 void
-do_movespace(int wspace)
-{
-	if (selmon->sel && 0 < wspace && wspace < 10) {
-		selmon->sel->wspace = wspace;
-		focus(NULL);
-		arrange(selmon);
-	}
-}
-
-void
-do_quit(int unused)
-{
-	running = 0;
-}
-
-void
-do_resizemouse(int unused)
+do_mouseresize(int unused)
 {
 	int ocx, ocy, nw, nh;
 	Client *c;
@@ -454,6 +430,30 @@ do_resizemouse(int unused)
 		selmon = m;
 		focus(NULL);
 	}
+}
+
+void
+do_movemon(int dir)
+{
+	if (!selmon->sel || !mons->next)
+		return;
+	sendmon(selmon->sel, dirtomon(dir));
+}
+
+void
+do_movespace(int wspace)
+{
+	if (selmon->sel && 0 < wspace && wspace < 10) {
+		selmon->sel->wspace = wspace;
+		focus(NULL);
+		arrange(selmon);
+	}
+}
+
+void
+do_quit(int unused)
+{
+	running = 0;
 }
 
 void

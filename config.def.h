@@ -76,8 +76,8 @@ static Key keys[] = {
 /* pointer buttons definitions */
 static Button buttons[] = {
 	/* event mask     button          function           argument */
-	{ MODKEY,         Button1,        do_movemouse,      0 },
+	{ MODKEY,         Button1,        do_mousemove,      0 },
 	{ MODKEY,         Button2,        do_togglefloating, 0 },
-	{ MODKEY,         Button3,        do_resizemouse,    0 },
+	{ MODKEY,         Button3,        do_mouseresize,    0 },
 };
 
