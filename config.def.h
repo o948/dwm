@@ -23,7 +23,7 @@ static const Rule rules[] = {
 
 /* commands */
 #define SPAWN(...) spawn((const char*[]){ __VA_ARGS__, NULL })
-void spawnmenu(int unused) {
+void do_spawnmenu(int unused) {
 	char num[] = "0";
 
 	num[0] += selmon->num;
@@ -31,15 +31,15 @@ void spawnmenu(int unused) {
 		"-nf", colors[SchemeNorm][0], "-nb", colors[SchemeNorm][1],
 		"-sf", colors[SchemeSel][0], "-sb", colors[SchemeSel][1]);
 }
-void spawnterm(int unused) {
+void do_spawnterm(int unused) {
 	SPAWN("st");
 }
 
 /* key definitions */
 #define MODKEY Mod1Mask
 #define WSPACEKEYS(KEY, WSPACE) \
-	{ MODKEY,                       KEY,       view,           WSPACE }, \
-	{ MODKEY|ShiftMask,             KEY,       move,           WSPACE },
+	{ MODKEY,                       KEY,       do_view,        WSPACE }, \
+	{ MODKEY|ShiftMask,             KEY,       do_move,        WSPACE },
 static Key keys[] = {
 	/* modifier                     key        function        argument */
 	WSPACEKEYS(                     XK_1,                      1)
@@ -51,33 +51,33 @@ static Key keys[] = {
 	WSPACEKEYS(                     XK_7,                      7)
 	WSPACEKEYS(                     XK_8,                      8)
 	WSPACEKEYS(                     XK_9,                      9)
-	{ MODKEY,                       XK_p,      spawnmenu,      0 },
-	{ MODKEY|ShiftMask,             XK_Return, spawnterm,      0 },
-	{ MODKEY,                       XK_j,      focusstack,     +1 },
-	{ MODKEY,                       XK_k,      focusstack,     -1 },
-	{ MODKEY,                       XK_h,      focusstack,     -2 },
-	{ MODKEY,                       XK_l,      focusstack,     +2 },
-	{ MODKEY,                       XK_i,      setnrows,       +1 },
-	{ MODKEY,                       XK_d,      setnrows,       -1 },
-	{ MODKEY,                       XK_h,      setcolw,        -1 },
-	{ MODKEY,                       XK_l,      setcolw,        +1 },
-	{ MODKEY,                       XK_Return, zoom,           0 },
-	{ MODKEY|ShiftMask,             XK_c,      killclient,     0 },
-	{ MODKEY,                       XK_Tab,    toggletiled,    0 },
-	{ MODKEY,                       XK_space,  togglefocus,    0 },
-	{ MODKEY|ShiftMask,             XK_space,  togglefloating, 0 },
-	{ MODKEY,                       XK_comma,  focusmon,       -1 },
-	{ MODKEY,                       XK_period, focusmon,       +1 },
-	{ MODKEY|ShiftMask,             XK_comma,  movemon,        -1 },
-	{ MODKEY|ShiftMask,             XK_period, movemon,        +1 },
-	{ MODKEY|ShiftMask,             XK_q,      quit,           0 },
+	{ MODKEY,                       XK_p,      do_spawnmenu,   0 },
+	{ MODKEY|ShiftMask,             XK_Return, do_spawnterm,   0 },
+	{ MODKEY,                       XK_j,      do_focusstack,  +1 },
+	{ MODKEY,                       XK_k,      do_focusstack,  -1 },
+	{ MODKEY,                       XK_h,      do_focusstack,  -2 },
+	{ MODKEY,                       XK_l,      do_focusstack,  +2 },
+	{ MODKEY,                       XK_i,      do_setnrows,    +1 },
+	{ MODKEY,                       XK_d,      do_setnrows,    -1 },
+	{ MODKEY,                       XK_h,      do_setcolw,     -1 },
+	{ MODKEY,                       XK_l,      do_setcolw,     +1 },
+	{ MODKEY,                       XK_Return, do_zoom,        0 },
+	{ MODKEY|ShiftMask,             XK_c,      do_killclient,  0 },
+	{ MODKEY,                       XK_Tab,    do_toggletiled, 0 },
+	{ MODKEY,                       XK_space,  do_togglefocus, 0 },
+	{ MODKEY|ShiftMask,             XK_space,  do_togglefloating, 0 },
+	{ MODKEY,                       XK_comma,  do_focusmon,    -1 },
+	{ MODKEY,                       XK_period, do_focusmon,    +1 },
+	{ MODKEY|ShiftMask,             XK_comma,  do_movemon,     -1 },
+	{ MODKEY|ShiftMask,             XK_period, do_movemon,     +1 },
+	{ MODKEY|ShiftMask,             XK_q,      do_quit,        0 },
 };
 
 /* pointer buttons definitions */
 static Button buttons[] = {
-	/* event mask     button          function        argument */
-	{ MODKEY,         Button1,        movemouse,      0 },
-	{ MODKEY,         Button2,        togglefloating, 0 },
-	{ MODKEY,         Button3,        resizemouse,    0 },
+	/* event mask     button          function           argument */
+	{ MODKEY,         Button1,        do_movemouse,      0 },
+	{ MODKEY,         Button2,        do_togglefloating, 0 },
+	{ MODKEY,         Button3,        do_resizemouse,    0 },
 };
 
