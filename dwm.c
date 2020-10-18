@@ -801,15 +801,25 @@ focusstack(int dir)
 	if (!selmon->sel)
 		return;
 	next = selmon->sel->isfloating ? &nextfloating : &nexttiled;
-	if (dir > 0) {
+	switch (dir) {
+	case +1:  /* next with wrap-around */
 		c = next(selmon->sel->next);
 		if (!c)
 			c = next(selmon->clients);
-	} else {
-		for (i = next(selmon->clients); i != selmon->sel; i = next(i->next))
+		break;
+	case -1:    /* previous with wrap-around */
+		for (i = next(selmon->clients); i && i != selmon->sel; i = next(i->next))
 			c = i;
 		if (!c)
 			c = next(selmon->sel->next);
+		break;
+	case +2: /* last */
+		for (i = next(selmon->sel->next); i; i = next(i->next))
+			c = i;
+		break;
+	case -2:  /* first */
+		c = next(selmon->clients);
+		break;
 	}
 	if (c) {
 		focus(c);

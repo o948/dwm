@@ -55,6 +55,8 @@ static Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_Return, spawnterm,      0 },
 	{ MODKEY,                       XK_j,      focusstack,     +1 },
 	{ MODKEY,                       XK_k,      focusstack,     -1 },
+	{ MODKEY,                       XK_h,      focusstack,     -2 },
+	{ MODKEY,                       XK_l,      focusstack,     +2 },
 	{ MODKEY,                       XK_i,      setnrows,       +1 },
 	{ MODKEY,                       XK_d,      setnrows,       -1 },
 	{ MODKEY,                       XK_h,      setcolw,        -1 },
