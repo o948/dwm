@@ -11,16 +11,6 @@ static const char *colors[][3]      = {
 };
 static const float dcolw = 0.05;  /* increment of first column's width */
 
-static const Rule rules[] = {
-	/* xprop(1):
-	 *	WM_CLASS(STRING) = instance, class
-	 *	WM_NAME(STRING) = title
-	 */
-	/* class      instance    title       workspace     isfloating   monitor */
-	{ "Gimp",     NULL,       NULL,       1,            1,           -1 },
-	{ "Firefox",  NULL,       NULL,       9,            0,           -1 },
-};
-
 /* commands */
 #define SPAWN(...) spawn((const char*[]){ __VA_ARGS__, NULL })
 void do_spawnmenu(int unused) {

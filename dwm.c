@@ -111,15 +111,6 @@ struct Monitor {
 	Window barwin;
 };
 
-typedef struct {
-	const char *class;
-	const char *instance;
-	const char *title;
-	int wspace;
-	int isfloating;
-	int monitor;
-} Rule;
-
 /* function declarations */
 static void do_close(int);
 static void do_focus(int dir);
@@ -152,7 +143,6 @@ static void on_motionnotify(XEvent *e);
 static void on_propertynotify(XEvent *e);
 static void on_unmapnotify(XEvent *e);
 
-static void applyrules(Client *c);
 static int applysizehints(Client *c, int *x, int *y, int *w, int *h, int interact);
 static void arrange(Monitor *m);
 static void arrangemon(Monitor *m);
@@ -812,43 +802,6 @@ on_unmapnotify(XEvent *e)
 	}
 }
 
-void
-applyrules(Client *c)
-{
-	const char *class, *instance;
-	unsigned int i;
-	const Rule *r;
-	Monitor *m;
-	XClassHint ch = { NULL, NULL };
-
-	/* rule matching */
-	c->isfloating = 0;
-	c->wspace = 0;
-	XGetClassHint(dpy, c->win, &ch);
-	class    = ch.res_class ? ch.res_class : broken;
-	instance = ch.res_name  ? ch.res_name  : broken;
-
-	for (i = 0; i < LENGTH(rules); i++) {
-		r = &rules[i];
-		if ((!r->title || strstr(c->name, r->title))
-		&& (!r->class || strstr(class, r->class))
-		&& (!r->instance || strstr(instance, r->instance)))
-		{
-			c->isfloating = r->isfloating;
-			c->wspace = r->wspace;
-			for (m = mons; m && m->num != r->monitor; m = m->next);
-			if (m)
-				c->mon = m;
-		}
-	}
-	if (ch.res_class)
-		XFree(ch.res_class);
-	if (ch.res_name)
-		XFree(ch.res_name);
-	if (!c->wspace)
-		c->wspace = c->mon->wspace;
-}
-
 int
 applysizehints(Client *c, int *x, int *y, int *w, int *h, int interact)
 {
@@ -1308,7 +1261,7 @@ manage(Window w, XWindowAttributes *wa)
 		c->wspace = t->wspace;
 	} else {
 		c->mon = selmon;
-		applyrules(c);
+		c->wspace = selmon->wspace;
 	}
 
 	if (c->x + WIDTH(c) > c->mon->mx + c->mon->mw)
