@@ -81,6 +81,7 @@ struct Client {
 	int basew, baseh, incw, inch, maxw, maxh, minw, minh;
 	int bw, oldbw;
 	int wspace;
+	float weight;
 	int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen;
 	Client *next;
 	Client *snext;
@@ -123,6 +124,7 @@ static void do_movespace(int wspace);
 static void do_quit(int);
 static void do_setcolw(int inc);
 static void do_setnrows(int inc);
+static void do_setweight(int inc);
 static void do_togglefloating(int center);
 static void do_togglefocus(int);
 static void do_toggletiled(int);
@@ -472,6 +474,7 @@ do_movespace(int wspace)
 {
 	if (selmon->sel && 0 < wspace && wspace < 10) {
 		selmon->sel->wspace = wspace;
+		selmon->sel->weight = 1.0;
 		focus(NULL);
 		arrange(selmon);
 	}
@@ -495,6 +498,18 @@ void
 do_setnrows(int inc)
 {
 	selmon->nrows[selmon->wspace] = MAX(0, selmon->nrows[selmon->wspace] + inc);
+	arrange(selmon);
+}
+
+void
+do_setweight(int inc)
+{
+	if (!selmon->sel || selmon->sel->isfloating)
+		return;
+	if (inc > 0)
+		selmon->sel->weight = MIN(4, selmon->sel->weight * 2);
+	else
+		selmon->sel->weight = MAX(0.25, selmon->sel->weight / 2);
 	arrange(selmon);
 }
 
@@ -1295,6 +1310,7 @@ manage(Window w, XWindowAttributes *wa)
 		c->mon = selmon;
 		c->wspace = selmon->wspace;
 	}
+	c->weight = 1.0;
 
 	if (c->x + WIDTH(c) > c->mon->mx + c->mon->mw)
 		c->x = c->mon->mx + c->mon->mw - WIDTH(c);
@@ -1671,9 +1687,15 @@ void
 tile(Monitor *m)
 {
 	unsigned int i, n, h, mw, my, ty;
+	float s1, s2;
 	Client *c;
 
-	for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), n++);
+	s1 = s2 = 0.0;
+	for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), n++)
+		if (n < m->nrows[m->wspace])
+			s1 += c->weight;
+		else
+			s2 += c->weight;
 	if (n == 0)
 		return;
 
@@ -1683,15 +1705,15 @@ tile(Monitor *m)
 		mw = m->ww;
 	for (i = my = ty = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++)
 		if (i < m->nrows[m->wspace]) {
-			h = (m->wh - my) / (MIN(n, m->nrows[m->wspace]) - i);
+			h = (m->wh - my) / s1 * c->weight;
+			s1 -= c->weight;
 			resize(c, m->wx, m->wy + my, mw - (2*c->bw), h - (2*c->bw), 0);
-			if (my + HEIGHT(c) < m->wh)
-				my += HEIGHT(c);
+			my = MIN(m->wh, my + HEIGHT(c));
 		} else {
-			h = (m->wh - ty) / (n - i);
+			h = (m->wh - ty) / s2 * c->weight;
+			s2 -= c->weight;
 			resize(c, m->wx + mw, m->wy + ty, m->ww - mw - (2*c->bw), h - (2*c->bw), 0);
-			if (ty + HEIGHT(c) < m->wh)
-				ty += HEIGHT(c);
+			ty = MIN(m->wh, ty + HEIGHT(c));
 		}
 }
 
