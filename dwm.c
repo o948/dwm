@@ -524,12 +524,14 @@ do_togglefloating(int center)
 		return;
 	selmon->sel->isfloating = !selmon->sel->isfloating || selmon->sel->isfixed;
 	if (selmon->sel->isfloating) {
-		if (center) {
-			selmon->sel->x = selmon->mx + (selmon->mw - WIDTH(selmon->sel)) / 2;
-			selmon->sel->y = selmon->my + (selmon->mh - HEIGHT(selmon->sel)) / 2;
-		}
-		resize(selmon->sel, selmon->sel->x, selmon->sel->y,
-			selmon->sel->w, selmon->sel->h, 0);
+		if (center)
+			resize(selmon->sel,
+				selmon->wx + selmon->ww / 4,
+				selmon->wy + selmon->wh / 4,
+				selmon->ww / 2, selmon->wh / 2, 0);
+		else
+			resize(selmon->sel, selmon->sel->x, selmon->sel->y,
+				selmon->sel->w, selmon->sel->h, 0);
 	}
 	arrange(selmon);
 }
