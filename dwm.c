@@ -127,7 +127,7 @@ static void do_setcolw(int inc);
 static void do_setnrows(int inc);
 static void do_setweight(int inc);
 static void do_togglefloating(int center);
-static void do_togglefocus(int);
+static void do_togglefloatingfocus(int);
 static void do_toggletiled(int);
 static void do_viewspace(int wspace);
 
@@ -535,7 +535,7 @@ do_togglefloating(int center)
 }
 
 void
-do_togglefocus(int unused)
+do_togglefloatingfocus(int unused)
 {
 	Client *c;
 
