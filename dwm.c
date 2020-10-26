@@ -541,8 +541,15 @@ do_togglefloatingfocus(int unused)
 
 	if (selmon->sel && selmon->sel->isfullscreen)
 		return;
-	c = !selmon->sel || selmon->sel->isfloating
-		? nexttiled(selmon->clients) : nextfloating(selmon->clients);
+	if (!selmon->sel || selmon->sel->isfloating) {
+		for (c = selmon->stack; c && (!ISVISIBLE(c) || c->isfloating); c = c->snext);
+		if (!c)
+			c = nexttiled(selmon->clients);
+	} else {
+		for (c = selmon->stack; c && (!ISVISIBLE(c) || !c->isfloating); c = c->snext);
+		if (!c)
+			c = nextfloating(selmon->clients);
+	}
 	if (c) {
 		focus(c);
 		restack(selmon);
