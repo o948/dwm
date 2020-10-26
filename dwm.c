@@ -119,13 +119,13 @@ static void do_focus(int dir);
 static void do_focusmon(int dir);
 static void do_mousemove(int);
 static void do_mouseresize(int);
-static void do_move(int dir);
 static void do_movemon(int dir);
 static void do_movespace(int wspace);
 static void do_quit(int);
 static void do_setcolw(int inc);
 static void do_setnrows(int inc);
 static void do_setweight(int inc);
+static void do_swaptiled(int dir);
 static void do_togglefloating(int center);
 static void do_togglefloatingfocus(int);
 static void do_toggletiled(int);
@@ -422,44 +422,6 @@ do_mouseresize(int unused)
 }
 
 void
-do_move(int dir)
-{
-	Client *sel = selmon->sel, *c = NULL, *i;
-
-	if (!sel || !ISTILED(sel))
-		return;
-	switch (dir) {
-	case +1:   /* swap with next */
-		c = nexttiled(sel->next);
-		if (c) {
-			detach(sel);
-			sel->next = c->next;
-			c->next = sel;
-		}
-		break;
-	case -1:   /* swap with previous */
-		for (i = nexttiled(selmon->clients); i && i != sel; i = nexttiled(i->next))
-			c = i;
-		if (c) {
-			detach(c);
-			c->next = sel->next;
-			sel->next = c;
-		}
-		break;
-	case +2:   /* move to last */
-		detach(sel);
-		attach(sel);
-		break;
-	case -2:   /* move to first */
-		detach(sel);
-		sel->next = selmon->clients;
-		selmon->clients = sel;
-		break;
-	}
-	arrange(selmon);
-}
-
-void
 do_movemon(int dir)
 {
 	if (!selmon->sel || !mons->next)
@@ -514,6 +476,44 @@ do_setweight(int inc)
 		selmon->sel->weight = MIN(4, selmon->sel->weight * 2);
 	else
 		selmon->sel->weight = MAX(0.25, selmon->sel->weight / 2);
+	arrange(selmon);
+}
+
+void
+do_swaptiled(int dir)
+{
+	Client *sel = selmon->sel, *c = NULL, *i;
+
+	if (!sel || !ISTILED(sel))
+		return;
+	switch (dir) {
+	case +1:   /* swap with next */
+		c = nexttiled(sel->next);
+		if (c) {
+			detach(sel);
+			sel->next = c->next;
+			c->next = sel;
+		}
+		break;
+	case -1:   /* swap with previous */
+		for (i = nexttiled(selmon->clients); i && i != sel; i = nexttiled(i->next))
+			c = i;
+		if (c) {
+			detach(c);
+			c->next = sel->next;
+			sel->next = c;
+		}
+		break;
+	case +2:   /* move to last */
+		detach(sel);
+		attach(sel);
+		break;
+	case -2:   /* move to first */
+		detach(sel);
+		sel->next = selmon->clients;
+		selmon->clients = sel;
+		break;
+	}
 	arrange(selmon);
 }
 
