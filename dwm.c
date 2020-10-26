@@ -49,7 +49,8 @@
 #define CLEANMASK(mask)         (mask & ~(numlockmask|LockMask) & (ShiftMask|ControlMask|Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
 #define INTERSECT(x,y,w,h,m)    (MAX(0, MIN((x)+(w),(m)->wx+(m)->ww) - MAX((x),(m)->wx)) \
                                * MAX(0, MIN((y)+(h),(m)->wy+(m)->wh) - MAX((y),(m)->wy)))
-#define ISVISIBLE(C)            ((C->wspace == C->mon->wspace))
+#define ISVISIBLE(C)            ((C)->wspace == (C)->mon->wspace)
+#define ISTILED(C)              (!(C)->isfloating && !(C)->isfullscreen && (C)->mon->tiled & 1 << (C)->mon->wspace)
 #define LENGTH(X)               (sizeof X / sizeof X[0])
 #define MOUSEMASK               (BUTTONMASK|PointerMotionMask)
 #define WIDTH(X)                ((X)->w + 2 * (X)->bw)
@@ -265,7 +266,7 @@ do_focus(int dir)
 	Client *c = NULL, *i;
 	Client *(*next)(Client *);
 
-	if (!selmon->sel)
+	if (!selmon->sel || selmon->sel->isfullscreen)
 		return;
 	next = selmon->sel->isfloating ? &nextfloating : &nexttiled;
 	switch (dir) {
@@ -318,9 +319,7 @@ do_mousemove(int unused)
 	XEvent ev;
 	Time lasttime = 0;
 
-	if (!(c = selmon->sel))
-		return;
-	if (c->isfullscreen) /* no support moving fullscreen windows by mouse */
+	if (!(c = selmon->sel) || c->isfullscreen)
 		return;
 	restack(selmon);
 	ocx = c->x;
@@ -377,9 +376,7 @@ do_mouseresize(int unused)
 	XEvent ev;
 	Time lasttime = 0;
 
-	if (!(c = selmon->sel))
-		return;
-	if (c->isfullscreen) /* no support resizing fullscreen windows by mouse */
+	if (!(c = selmon->sel) || c->isfullscreen)
 		return;
 	restack(selmon);
 	ocx = c->x;
@@ -429,7 +426,7 @@ do_move(int dir)
 {
 	Client *sel = selmon->sel, *c = NULL, *i;
 
-	if (!sel || sel->isfloating)
+	if (!sel || !ISTILED(sel))
 		return;
 	switch (dir) {
 	case +1:   /* swap with next */
@@ -473,12 +470,14 @@ do_movemon(int dir)
 void
 do_movespace(int wspace)
 {
-	if (selmon->sel && 0 < wspace && wspace < 10) {
-		selmon->sel->wspace = wspace;
-		selmon->sel->weight = 1.0;
-		focus(NULL);
-		arrange(selmon);
-	}
+	if (!selmon->sel)
+		return;
+	if (wspace <= 0 || 10 <= wspace || selmon->sel->wspace == wspace)
+		return;
+	selmon->sel->wspace = wspace;
+	selmon->sel->weight = 1.0;
+	focus(NULL);
+	arrange(selmon);
 }
 
 void
@@ -490,6 +489,8 @@ do_quit(int unused)
 void
 do_setcolw(int inc)
 {
+	if (!selmon->sel || !ISTILED(selmon->sel))
+		return;
 	selmon->colw[selmon->wspace] = MAX(0.05, MIN(0.95,
 		selmon->colw[selmon->wspace] + inc * dcolw));
 	arrange(selmon);
@@ -498,6 +499,8 @@ do_setcolw(int inc)
 void
 do_setnrows(int inc)
 {
+	if (!selmon->sel || !ISTILED(selmon->sel))
+		return;
 	selmon->nrows[selmon->wspace] = MAX(0, selmon->nrows[selmon->wspace] + inc);
 	arrange(selmon);
 }
@@ -505,7 +508,7 @@ do_setnrows(int inc)
 void
 do_setweight(int inc)
 {
-	if (!selmon->sel || selmon->sel->isfloating)
+	if (!selmon->sel || !ISTILED(selmon->sel))
 		return;
 	if (inc > 0)
 		selmon->sel->weight = MIN(4, selmon->sel->weight * 2);
@@ -517,9 +520,7 @@ do_setweight(int inc)
 void
 do_togglefloating(int center)
 {
-	if (!selmon->sel)
-		return;
-	if (selmon->sel->isfullscreen) /* no support for fullscreen windows */
+	if (!selmon->sel || selmon->sel->isfullscreen)
 		return;
 	selmon->sel->isfloating = !selmon->sel->isfloating || selmon->sel->isfixed;
 	if (selmon->sel->isfloating) {
@@ -536,7 +537,11 @@ do_togglefloating(int center)
 void
 do_togglefocus(int unused)
 {
-	Client *c = !selmon->sel || selmon->sel->isfloating
+	Client *c;
+
+	if (selmon->sel && selmon->sel->isfullscreen)
+		return;
+	c = !selmon->sel || selmon->sel->isfloating
 		? nexttiled(selmon->clients) : nextfloating(selmon->clients);
 	if (c) {
 		focus(c);
@@ -547,6 +552,8 @@ do_togglefocus(int unused)
 void
 do_toggletiled(int unused)
 {
+	if (selmon->sel && selmon->sel->isfullscreen)
+		return;
 	selmon->tiled ^= 1 << selmon->wspace;
 	if (selmon->sel)
 		arrange(selmon);
