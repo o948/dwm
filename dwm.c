@@ -278,7 +278,8 @@ do_focus(int dir)
 		for (i = next(selmon->clients); i && i != selmon->sel; i = next(i->next))
 			c = i;
 		if (!c)
-			c = next(selmon->sel->next);
+			for (i = next(selmon->sel->next); i; i = next(i->next))
+				c = i;
 		break;
 	case +2: /* last */
 		for (i = next(selmon->sel->next); i; i = next(i->next))
