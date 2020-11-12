@@ -125,7 +125,7 @@ static void do_quit(int);
 static void do_setcolw(int inc);
 static void do_setnrows(int inc);
 static void do_setweight(int inc);
-static void do_swaptiled(int dir);
+static void do_swaplaid(int dir);
 static void do_togglefloating(int center);
 static void do_togglefloatingfocus(int);
 static void do_toggletiled(int);
@@ -171,7 +171,7 @@ static void grabkeys(void);
 static void manage(Window w, XWindowAttributes *wa);
 static void monocle(Monitor *m);
 static Client *nextfloating(Client *c);
-static Client *nexttiled(Client *c);
+static Client *nextlaid(Client *c);
 static Monitor *recttomon(int x, int y, int w, int h);
 static void resize(Client *c, int x, int y, int w, int h, int interact);
 static void resizeclient(Client *c, int x, int y, int w, int h);
@@ -268,7 +268,7 @@ do_focus(int dir)
 
 	if (!selmon->sel || selmon->sel->isfullscreen)
 		return;
-	next = selmon->sel->isfloating ? &nextfloating : &nexttiled;
+	next = selmon->sel->isfloating ? &nextfloating : &nextlaid;
 	switch (dir) {
 	case +1:  /* next with wrap-around */
 		c = next(selmon->sel->next);
@@ -480,15 +480,15 @@ do_setweight(int inc)
 }
 
 void
-do_swaptiled(int dir)
+do_swaplaid(int dir)
 {
 	Client *sel = selmon->sel, *c = NULL, *i;
 
-	if (!sel || !ISTILED(sel))
+	if (!sel || sel->isfloating)
 		return;
 	switch (dir) {
 	case +1:   /* swap with next */
-		c = nexttiled(sel->next);
+		c = nextlaid(sel->next);
 		if (c) {
 			detach(sel);
 			sel->next = c->next;
@@ -496,7 +496,7 @@ do_swaptiled(int dir)
 		}
 		break;
 	case -1:   /* swap with previous */
-		for (i = nexttiled(selmon->clients); i && i != sel; i = nexttiled(i->next))
+		for (i = nextlaid(selmon->clients); i && i != sel; i = nextlaid(i->next))
 			c = i;
 		if (c) {
 			detach(c);
@@ -546,7 +546,7 @@ do_togglefloatingfocus(int unused)
 	if (!selmon->sel || selmon->sel->isfloating) {
 		for (c = selmon->stack; c && (!ISVISIBLE(c) || c->isfloating); c = c->snext);
 		if (!c)
-			c = nexttiled(selmon->clients);
+			c = nextlaid(selmon->clients);
 	} else {
 		for (c = selmon->stack; c && (!ISVISIBLE(c) || !c->isfloating); c = c->snext);
 		if (!c)
@@ -1371,7 +1371,7 @@ monocle(Monitor *m)
 {
 	Client *c;
 
-	for (c = nexttiled(m->clients); c; c = nexttiled(c->next))
+	for (c = nextlaid(m->clients); c; c = nextlaid(c->next))
 		resize(c, m->wx, m->wy, m->ww - 2 * c->bw, m->wh - 2 * c->bw, 0);
 }
 
@@ -1383,7 +1383,7 @@ nextfloating(Client *c)
 }
 
 Client *
-nexttiled(Client *c)
+nextlaid(Client *c)
 {
 	for (; c && (c->isfloating || !ISVISIBLE(c)); c = c->next);
 	return c;
@@ -1708,7 +1708,7 @@ tile(Monitor *m)
 	Client *c;
 
 	s1 = s2 = 0.0;
-	for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), n++)
+	for (n = 0, c = nextlaid(m->clients); c; c = nextlaid(c->next), n++)
 		if (n < m->nrows[m->wspace])
 			s1 += c->weight;
 		else
@@ -1720,7 +1720,7 @@ tile(Monitor *m)
 		mw = m->nrows[m->wspace] ? m->ww * m->colw[m->wspace] : 0;
 	else
 		mw = m->ww;
-	for (i = my = ty = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++)
+	for (i = my = ty = 0, c = nextlaid(m->clients); c; c = nextlaid(c->next), i++)
 		if (i < m->nrows[m->wspace]) {
 			h = (m->wh - my) / s1 * c->weight;
 			s1 -= c->weight;
