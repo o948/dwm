@@ -20,7 +20,7 @@ void do_menu(int unused) {
 		"-nf", colors[SchemeNorm][0], "-nb", colors[SchemeNorm][1],
 		"-sf", colors[SchemeSel][0], "-sb", colors[SchemeSel][1]);
 }
-void do_term(int unused) { SPAWN("st"); }
+void do_term(int unused) { SPAWN("xterm"); }
 void do_lock(int unused) { SPAWN("slock"); }
 
 /* key definitions */
