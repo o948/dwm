@@ -16,9 +16,7 @@ static const float dcolw = 0.05;  /* increment of first column's width */
 void do_menu(int unused) {
 	char num[] = "0";
 	num[0] += selmon->num;
-	SPAWN("dmenu_run", "-b", "-m", num, "-fn", fonts[0],
-		"-nf", colors[SchemeNorm][0], "-nb", colors[SchemeNorm][1],
-		"-sf", colors[SchemeSel][0], "-sb", colors[SchemeSel][1]);
+	SPAWN("dmenu_run", "-b", "-m", num);
 }
 void do_screenlock(int unused) { SPAWN("slock"); }
 void do_screenshot(int unused) { SPAWN("scrot"); }
