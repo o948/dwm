@@ -20,8 +20,9 @@ void do_menu(int unused) {
 		"-nf", colors[SchemeNorm][0], "-nb", colors[SchemeNorm][1],
 		"-sf", colors[SchemeSel][0], "-sb", colors[SchemeSel][1]);
 }
-void do_term(int unused) { SPAWN("xterm"); }
-void do_lock(int unused) { SPAWN("slock"); }
+void do_screenlock(int unused) { SPAWN("slock"); }
+void do_screenshot(int unused) { SPAWN("scrot"); }
+void do_terminal(int unused) { SPAWN("xterm"); }
 
 /* key definitions */
 #define MODKEY Mod4Mask
@@ -41,8 +42,9 @@ static Key keys[] = {
 	WSPACEKEYS(             XK_8,                         8)
 	WSPACEKEYS(             XK_9,                         9)
 	{ MODKEY,               XK_r,      do_menu,           0 },
-	{ MODKEY,               XK_Return, do_term,           0 },
-	{ ControlMask|Mod1Mask, XK_l,      do_lock,           0 },
+	{ ControlMask|Mod1Mask, XK_l,      do_screenlock,     0 },
+	{ 0,                    XK_Print,  do_screenshot,     0 },
+	{ MODKEY,               XK_Return, do_terminal,       0 },
 	{ MODKEY,               XK_q,      do_close,          0 },
 	{ MODKEY,               XK_Tab,    do_toggletiled,    0 },
 	{ MODKEY,               XK_Insert, do_setnrows,      +1 },
